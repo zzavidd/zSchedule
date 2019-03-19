@@ -22,6 +22,26 @@ class ViewController: UIViewController, UITextViewDelegate, UITableViewDelegate,
         super.viewWillAppear(animated)
     }
     
+    var titleTextField: UITextField!
+    
+    func titleTextField(textfield: UITextField!){
+        titleTextField = textfield
+        titleTextField.placeholder = "Enter title"
+    }
+
+    @IBAction func addButton(_ sender: UIBarButtonItem) {
+        let alert = UIAlertController(title: "Add Your Task", message: "Add Your Item Name", preferredStyle: .alert)
+        
+        let addAction = UIAlertAction(title: "Save", style: .default, handler: self.save)
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+        
+        alert.addAction(addAction)
+        alert.addAction(cancelAction)
+        alert.addTextField(configurationHandler: titleTextField)
+        self.present(alert, animated: true, completion: nil)
+    }
+    
     func save(alert: UIAlertAction!){
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         let context = appDelegate.persistentContainer.viewContext
