@@ -31,12 +31,16 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     override func viewWillAppear(_ animated: Bool){
         super.viewWillAppear(animated)
 
+        /** Reload table data */
+        loadTasks()
         tableView.reloadData()
     }
     
     
     /** Fetch all items from CoreData */
     func loadTasks(){
+        tasks.removeAll()
+        
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
         let context = appDelegate.persistentContainer.viewContext
         
@@ -46,6 +50,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         do {
             let result = try context.fetch(request)
             for data in result as! [NSManagedObject] {
+                print(data)
                 tasks.append(data)
             }
         } catch {
