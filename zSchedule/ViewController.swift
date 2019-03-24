@@ -9,67 +9,142 @@
 import UIKit
 import CoreData
 
-class ViewController: UIViewController, UITextViewDelegate, UITableViewDelegate, UITableViewDataSource {
+class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, NSFetchedResultsControllerDelegate {
     
     @IBOutlet weak var tableView: UITableView!
-    var taskTitle: [NSManagedObject] = []
+    @IBOutlet weak var titleLabel: UILabel!
+    @IBOutlet weak var dateLabel: UILabel!
+    
+    var tasks: [NSManagedObject] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        /** Detect long presses */
+        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(self.handleLongPress))
+        self.view.addGestureRecognizer(longPressRecognizer)
+        
+        loadTasks()
+        
     }
     
     override func viewWillAppear(_ animated: Bool){
         super.viewWillAppear(animated)
-    }
-    
-    var titleTextField: UITextField!
-    
-    func titleTextField(textfield: UITextField!){
-        titleTextField = textfield
-        titleTextField.placeholder = "Enter title"
-    }
 
-    @IBAction func addButton(_ sender: UIBarButtonItem) {
-        let alert = UIAlertController(title: "Add Your Task", message: "Add Your Item Name", preferredStyle: .alert)
-        
-        let addAction = UIAlertAction(title: "Save", style: .default, handler: self.save)
-        
-        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-        
-        alert.addAction(addAction)
-        alert.addAction(cancelAction)
-        alert.addTextField(configurationHandler: titleTextField)
-        self.present(alert, animated: true, completion: nil)
+        tableView.reloadData()
     }
     
-    func save(alert: UIAlertAction!){
-        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+    
+    /** Fetch all items from CoreData */
+    func loadTasks(){
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
         let context = appDelegate.persistentContainer.viewContext
-        let entity = NSEntityDescription.entity(forEntityName: "Title", in: context)!
         
-        let title = NSManagedObject(entity: entity, insertInto: context)
-        title.setValue(titleTextField.text, forKey: "title")
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Task")
+        request.returnsObjectsAsFaults = false
         
         do {
-            try context.save()
-            taskTitle.append(title)
+            let result = try context.fetch(request)
+            for data in result as! [NSManagedObject] {
+                tasks.append(data)
+            }
         } catch {
-            print("Error")
+            print("Failed.")
+        }
+    }
+    
+    /** Delete task from CoreData */
+    func deleteTask(task: NSManagedObject){
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+        let context = appDelegate.persistentContainer.viewContext
+        
+        context.delete(task)
+        
+        do { try context.save() } catch { print(error) }
+    }
+    
+    
+    /** Bring up ActionSheet on long press */
+    @IBAction func handleLongPress(_ sender: UILongPressGestureRecognizer) {
+        if sender.state == .began {
+            
+            let position = sender.location(in: tableView)
+            
+            if let index = tableView.indexPathForRow(at: position){
+                
+                let cell = tableView.cellForRow(at: index)
+                
+                let actionSheet: UIAlertController = UIAlertController(
+                    title: cell?.textLabel?.text,
+                    message: "What do you wish to do with this task?",
+                    preferredStyle: .actionSheet
+                )
+                
+                let cancelButton = UIAlertAction(title: "Cancel", style: .cancel)
+                let editButton = UIAlertAction(title: "Edit", style: .default) { _ in
+                    
+                }
+                let deleteButton = UIAlertAction(title: "Delete", style: .default) { _ in
+                    self.deleteTask(task: self.tasks[index.row])
+                    self.tasks.remove(at: index.row)
+                    self.tableView.reloadData()
+                }
+                
+                actionSheet.addAction(editButton)
+                actionSheet.addAction(deleteButton)
+                actionSheet.addAction(cancelButton)
+                
+                self.present(actionSheet, animated: true, completion: nil)
+            }
+        }
+    }
+    
+    /** Return number of tasks */
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return tasks.count
+    }
+    
+    /** Load tasks into tableView */
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let task = tasks[indexPath.row]
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        
+        let title = task.value(forKey: "title") as! String
+        let people = task.value(forKey: "people") as! String
+        cell.textLabel?.text = "\(title) \(!people.isEmpty ? "w/\(people)" : "")"
+        
+        let dt = task.value(forKey: "date") as? Date
+        
+        let df1 = DateFormatter()
+        let df2 = DateFormatter()
+        let suffix = DateFormatter()
+        df1.dateFormat = "EEEE"
+        suffix.dateFormat = "d"
+        df2.dateFormat = "MMMM YYYY"
+
+        let former = df1.string(from: dt!)
+        let dateOrdinal = getDateWithOrdinal(suffix.string(from: dt!))
+        let latter = df2.string(from: dt!)
+        
+        let date = "\(former) \(dateOrdinal) \(latter)"
+        
+        cell.detailTextLabel?.text = date
+        
+        return cell
+    }
+    
+    /** Retrieve the ordinal of chosen date */
+    func getDateWithOrdinal(_ dt: String) -> String {
+        var suffix = ""
+        
+        switch dt {
+        case "1", "21", "31": suffix = "st";
+        case "2", "22": suffix = "nd";
+        case "3", "23": suffix = "rd";
+        default: suffix = "th";
         }
         
-        self.tableView.reloadData()
-    }
-    
-    
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return taskTitle.count
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let title = taskTitle[indexPath.row]
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        cell.textLabel?.text = title.value(forKey: "title") as? String
-        return cell
+        return "\(dt)\(suffix)"
     }
 
 }
