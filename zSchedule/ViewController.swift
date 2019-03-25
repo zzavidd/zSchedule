@@ -16,9 +16,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     @IBOutlet weak var dateLabel: UILabel!
     
     var tasks: [NSManagedObject] = []
+    var months: [String] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.hideKeyboardWhenTappedAround()
         
         /** Detect long presses */
         let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(self.handleLongPress))
@@ -45,12 +47,13 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         let context = appDelegate.persistentContainer.viewContext
         
         let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Task")
+        let sort = NSSortDescriptor(key: "date", ascending: true)
+        request.sortDescriptors = [sort]
         request.returnsObjectsAsFaults = false
         
         do {
             let result = try context.fetch(request)
             for data in result as! [NSManagedObject] {
-                print(data)
                 tasks.append(data)
             }
         } catch {
@@ -109,14 +112,14 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         return tasks.count
     }
     
-    /** Load tasks into tableView */
+    /** Return the cell at particular index */
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let task = tasks[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         
         let title = task.value(forKey: "title") as! String
         let people = task.value(forKey: "people") as! String
-        cell.textLabel?.text = "\(title) \(!people.isEmpty ? "w/\(people)" : "")"
+        cell.textLabel?.text = "\(title) \(!people.isEmpty ? "(w. \(people))" : "")"
         
         let dt = task.value(forKey: "date") as? Date
         
@@ -125,7 +128,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         let suffix = DateFormatter()
         df1.dateFormat = "EEEE"
         suffix.dateFormat = "d"
-        df2.dateFormat = "MMMM YYYY"
+        df2.dateFormat = "MMMM YYYY - HH:mm"
 
         let former = df1.string(from: dt!)
         let dateOrdinal = getDateWithOrdinal(suffix.string(from: dt!))
@@ -136,6 +139,27 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         cell.detailTextLabel?.text = date
         
         return cell
+    }
+    
+    
+    func numberOfSections(in tableView: UITableView) -> Int {
+        
+        for task in tasks {
+            let date = task.value(forKey: "date") as? Date
+            let df = DateFormatter()
+            df.dateFormat = "MMMM YYYY"
+            let month = df.string(from: date!)
+            
+            if !months.contains(month) {
+                months.append(month)
+            }
+        }
+        
+        return months.count
+    }
+    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return months[section]
     }
     
     /** Retrieve the ordinal of chosen date */
@@ -154,3 +178,16 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
 
 }
 
+
+/** Hide keyboard on touches */
+extension UIViewController {
+    func hideKeyboardWhenTappedAround(){
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(UIViewController.dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+    }
+    
+    @objc func dismissKeyboard(){
+        view.endEditing(true)
+    }
+}

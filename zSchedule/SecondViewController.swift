@@ -21,8 +21,12 @@ class SecondViewController: UIViewController, UITextFieldDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.hideKeyboardWhenTappedAround()
+        
         titleTextField.delegate = self
         peopleTextField.delegate = self
+        
+        datePicker.setValue(UIColor.white, forKey: "textColor")
     }
     
     // MARK: Actions
