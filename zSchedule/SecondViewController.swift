@@ -9,7 +9,7 @@
 import UIKit
 import CoreData
 
-class SecondViewController: UIViewController, UITextFieldDelegate {
+class SecondViewController: UITableViewController, UITextFieldDelegate {
 
     // MARK: Properties
     
@@ -17,6 +17,7 @@ class SecondViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var peopleTextField: UITextField!
     @IBOutlet weak var locationTextView: UITextView!
     @IBOutlet weak var datePicker: UIDatePicker!
+    // @IBOutlet weak var daySwitch: UISwitch!
     var selectedDate = Date()
     
     override func viewDidLoad() {
@@ -26,17 +27,18 @@ class SecondViewController: UIViewController, UITextFieldDelegate {
         titleTextField.delegate = self
         peopleTextField.delegate = self
         
+        titleTextField.setValue(UIColor.darkGray, forKeyPath: "_placeholderLabel.textColor")
+        peopleTextField.setValue(UIColor.darkGray, forKeyPath: "_placeholderLabel.textColor")
         datePicker.setValue(UIColor.white, forKey: "textColor")
     }
     
     // MARK: Actions
     
     @IBAction func saveButton(_ sender: UIBarButtonItem) {
-    
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
         let context = appDelegate.persistentContainer.viewContext
         let entity = NSEntityDescription.entity(forEntityName: "Task", in: context)
-    
+        
         let newItem = NSManagedObject(entity: entity!, insertInto: context)
         
         newItem.setValue(titleTextField.text, forKey: "title")
@@ -46,12 +48,10 @@ class SecondViewController: UIViewController, UITextFieldDelegate {
         
         do {
             try context.save()
-             _ = navigationController?.popViewController(animated: true)
+            _ = navigationController?.popViewController(animated: true)
         } catch {
             print("Could not save item to schedule.")
         }
-        
-        
     }
     
     @IBAction func cancelButton(_ sender: UIBarButtonItem) {
@@ -61,6 +61,11 @@ class SecondViewController: UIViewController, UITextFieldDelegate {
     @IBAction func dateChanged(_ sender: UIDatePicker) {
         selectedDate = sender.date
     }
+    
+//    @IBAction func switchChange(_ sender: UISwitch) {
+//        
+//    }
+    
     
     //MARK: UITextFieldDelegate
     
