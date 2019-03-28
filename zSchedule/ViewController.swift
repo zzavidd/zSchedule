@@ -167,7 +167,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         let suffix = DateFormatter()
         df1.dateFormat = "EEEE"
         suffix.dateFormat = "d"
-        df2.dateFormat = !(time ?? true) ? "MMMM YYYY - HH:mm" : "MMMM YYYY"
+        df2.dateFormat = (time ?? true) ? "MMMM YYYY - HH:mm" : "MMMM YYYY"
 
         let former = df1.string(from: dt!)
         let dateOrdinal = getDateWithOrdinal(suffix.string(from: dt!))

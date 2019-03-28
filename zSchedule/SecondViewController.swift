@@ -10,8 +10,6 @@ import UIKit
 import CoreData
 
 class SecondViewController: UITableViewController, UITextFieldDelegate {
-
-    // MARK: Properties
     
     @IBOutlet weak var titleTextField: UITextField!
     @IBOutlet weak var peopleTextField: UITextField!
@@ -44,6 +42,7 @@ class SecondViewController: UITableViewController, UITextFieldDelegate {
             timeSwitch.setOn((item?.time)!, animated: true)
             
             selectedDate = datePicker.date
+            datePicker.datePickerMode = timeSwitch.isOn ? .dateAndTime : .date
         }
     }
     
@@ -92,19 +91,19 @@ class SecondViewController: UITableViewController, UITextFieldDelegate {
         datePicker.datePickerMode = time ? .dateAndTime : .date
     }
     
-    
-    //MARK: UITextFieldDelegate
-    
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
     }
     
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        if textField === titleTextField
-        { titleTextField.text = textField.text }
+    /** Store text field values */
+    func textFieldDidEndEditing(_ sender: UITextField) {
+        if sender === titleTextField {
+            titleTextField.text = sender.text
+        }
         
-        if textField === peopleTextField
-        { peopleTextField.text = textField.text }
+        if sender === peopleTextField {
+            peopleTextField.text = sender.text
+        }
     }
 }
