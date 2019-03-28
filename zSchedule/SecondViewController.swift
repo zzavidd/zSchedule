@@ -17,8 +17,11 @@ class SecondViewController: UITableViewController, UITextFieldDelegate {
     @IBOutlet weak var peopleTextField: UITextField!
     @IBOutlet weak var locationTextView: UITextView!
     @IBOutlet weak var datePicker: UIDatePicker!
-    // @IBOutlet weak var daySwitch: UISwitch!
+    @IBOutlet weak var timeSwitch: UISwitch!
     var selectedDate = Date()
+    var time = true
+    
+    var item: Item?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,25 +29,45 @@ class SecondViewController: UITableViewController, UITextFieldDelegate {
         
         titleTextField.delegate = self
         peopleTextField.delegate = self
+        timeSwitch.addTarget(self, action: #selector(switchToggled), for: .valueChanged)
         
         titleTextField.setValue(UIColor.darkGray, forKeyPath: "_placeholderLabel.textColor")
         peopleTextField.setValue(UIColor.darkGray, forKeyPath: "_placeholderLabel.textColor")
         datePicker.setValue(UIColor.white, forKey: "textColor")
+        
+        /** If editing, populate fields with item details */
+        if item != nil {
+            titleTextField.text = item?.title
+            peopleTextField.text = item?.people
+            locationTextView.text = item?.location
+            datePicker.date = (item?.date)!
+            timeSwitch.setOn((item?.time)!, animated: true)
+            
+            selectedDate = datePicker.date
+        }
     }
     
-    // MARK: Actions
-    
+    /** Add new or edit event in CoreData */
     @IBAction func saveButton(_ sender: UIBarButtonItem) {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
         let context = appDelegate.persistentContainer.viewContext
-        let entity = NSEntityDescription.entity(forEntityName: "Task", in: context)
         
-        let newItem = NSManagedObject(entity: entity!, insertInto: context)
+        var newItem: NSManagedObject;
+        
+        if item == nil {
+            /** Adding new task */
+            let entity = NSEntityDescription.entity(forEntityName: "Task", in: context)
+            newItem = NSManagedObject(entity: entity!, insertInto: context)
+        } else {
+            /** Editing task */
+            newItem = item!.id
+        }
         
         newItem.setValue(titleTextField.text, forKey: "title")
         newItem.setValue(peopleTextField!.text, forKey: "people")
         newItem.setValue("", forKey: "location")
         newItem.setValue(selectedDate, forKey: "date")
+        newItem.setValue(time, forKey: "time")
         
         do {
             try context.save()
@@ -54,6 +77,7 @@ class SecondViewController: UITableViewController, UITextFieldDelegate {
         }
     }
     
+    /** Return to list of events */
     @IBAction func cancelButton(_ sender: UIBarButtonItem) {
         _ = navigationController?.popViewController(animated: true)
     }
@@ -62,9 +86,11 @@ class SecondViewController: UITableViewController, UITextFieldDelegate {
         selectedDate = sender.date
     }
     
-//    @IBAction func switchChange(_ sender: UISwitch) {
-//        
-//    }
+    /** Change datepicker mode on switch */
+    @IBAction func switchToggled(_ sender: UISwitch) {
+        time = sender.isOn
+        datePicker.datePickerMode = time ? .dateAndTime : .date
+    }
     
     
     //MARK: UITextFieldDelegate

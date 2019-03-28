@@ -72,12 +72,13 @@
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="vrx-3O-8Mb">
                             <connections>
                                 <action selector="addButton:" destination="BYZ-38-t0r" id="adU-xL-8ow"/>
-                                <segue destination="Tv4-pW-myl" kind="show" id="soZ-c3-RSr"/>
+                                <segue destination="Tv4-pW-myl" kind="show" identifier="addItem" id="soZ-c3-RSr"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
                     <connections>
                         <outlet property="tableView" destination="gA6-ZF-ddU" id="fy2-80-HUr"/>
+                        <segue destination="Tv4-pW-myl" kind="show" identifier="editItem" id="SIs-WB-FFS"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
@@ -93,7 +94,7 @@
         <!--Schedule Item-->
         <scene sceneID="PoN-cn-jYL">
             <objects>
-                <tableViewController id="Tv4-pW-myl" customClass="SecondViewController" customModule="zSchedule" customModuleProvider="target" sceneMemberID="viewController">
+                <tableViewController storyboardIdentifier="secondViewController" id="Tv4-pW-myl" customClass="SecondViewController" customModule="zSchedule" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="static" style="plain" separatorStyle="none" allowsSelection="NO" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" id="z2Y-8U-A91">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="724"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -168,11 +169,14 @@
                                                 <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="6Ky-4i-OfY">
                                                     <rect key="frame" x="313" y="6" width="49" height="31"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                    <connections>
+                                                        <action selector="switchToggled:" destination="Tv4-pW-myl" eventType="valueChanged" id="w2O-o1-ExO"/>
+                                                    </connections>
                                                 </switch>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="All-Day" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yM7-AB-urN">
-                                                    <rect key="frame" x="15" y="12" width="56" height="21"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="At a certain time?" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="yM7-AB-urN">
+                                                    <rect key="frame" x="16" y="16" width="120" height="18"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="15"/>
                                                     <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
@@ -188,7 +192,7 @@
                                             <rect key="frame" x="0.0" y="0.0" width="375" height="170"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <datePicker contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="dateAndTime" minuteInterval="5" translatesAutoresizingMaskIntoConstraints="NO" id="8sZ-jD-fh7">
+                                                <datePicker contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" datePickerMode="date" minuteInterval="5" translatesAutoresizingMaskIntoConstraints="NO" id="8sZ-jD-fh7">
                                                     <rect key="frame" x="0.0" y="0.0" width="375" height="173"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                                                     <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -256,12 +260,13 @@
                         <outlet property="datePicker" destination="8sZ-jD-fh7" id="ddo-CD-0MD"/>
                         <outlet property="locationTextView" destination="bRU-rm-4oX" id="sJl-Kq-mnC"/>
                         <outlet property="peopleTextField" destination="I9B-LF-iah" id="6Xx-fq-HgS"/>
+                        <outlet property="timeSwitch" destination="6Ky-4i-OfY" id="x6B-I3-J9Y"/>
                         <outlet property="titleTextField" destination="8Aw-eh-CKi" id="Fl6-fO-3DW"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="xj2-I8-58E" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1760.8" y="792.85714285714289"/>
+            <point key="canvasLocation" x="1716" y="793"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="GGn-gp-aHc">
@@ -285,4 +290,7 @@
             <point key="canvasLocation" x="133.59999999999999" y="792.95352323838085"/>
         </scene>
     </scenes>
+    <inferredMetricsTieBreakers>
+        <segue reference="soZ-c3-RSr"/>
+    </inferredMetricsTieBreakers>
 </document>

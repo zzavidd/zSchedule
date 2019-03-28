@@ -9,6 +9,17 @@
 import UIKit
 import CoreData
 
+/** Create model of event item */
+struct Item {
+    let id: NSManagedObject
+    let title: String
+    let people: String
+    let location: String
+    let finished: Bool
+    let date: Date
+    let time: Bool
+}
+
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, NSFetchedResultsControllerDelegate {
     
     @IBOutlet weak var tableView: UITableView!
@@ -17,6 +28,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     var tasks: [NSManagedObject] = []
     var months: [String] = []
+    var selectedTaskIndex = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -38,6 +50,31 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableView.reloadData()
     }
     
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "editItem" {
+            let secondViewController = segue.destination as! SecondViewController
+            let selectedTask = tasks[selectedTaskIndex]
+            
+            let title = selectedTask.value(forKey: "title") as! String
+            let people = selectedTask.value(forKey: "people") as! String
+            let location = selectedTask.value(forKey: "location") as! String
+            let finished = selectedTask.value(forKey: "finished") as? Bool
+            let date = selectedTask.value(forKey: "date") as! Date
+            let time = selectedTask.value(forKey: "time") as? Bool
+            
+            let item = Item (
+                id: selectedTask,
+                title: title,
+                people: people,
+                location: location,
+                finished: finished ?? false,
+                date: date,
+                time: time ?? true
+            )
+            
+            secondViewController.item = item
+        }
+    }
     
     /** Fetch all items from CoreData */
     func loadTasks(){
@@ -90,7 +127,8 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 
                 let cancelButton = UIAlertAction(title: "Cancel", style: .cancel)
                 let editButton = UIAlertAction(title: "Edit", style: .default) { _ in
-                    
+                    self.selectedTaskIndex = index.row
+                    self.performSegue(withIdentifier: "editItem", sender: self)
                 }
                 let deleteButton = UIAlertAction(title: "Delete", style: .default) { _ in
                     self.deleteTask(task: self.tasks[index.row])
@@ -119,6 +157,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         let title = task.value(forKey: "title") as! String
         let people = task.value(forKey: "people") as! String
+        let time = task.value(forKey: "time") as? Bool
         cell.textLabel?.text = "\(title) \(!people.isEmpty ? "(w. \(people))" : "")"
         
         let dt = task.value(forKey: "date") as? Date
@@ -128,7 +167,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         let suffix = DateFormatter()
         df1.dateFormat = "EEEE"
         suffix.dateFormat = "d"
-        df2.dateFormat = "MMMM YYYY - HH:mm"
+        df2.dateFormat = !(time ?? true) ? "MMMM YYYY - HH:mm" : "MMMM YYYY"
 
         let former = df1.string(from: dt!)
         let dateOrdinal = getDateWithOrdinal(suffix.string(from: dt!))
