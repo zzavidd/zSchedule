@@ -26,9 +26,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     @IBOutlet weak var titleLabel: UILabel!
     @IBOutlet weak var dateLabel: UILabel!
     
-    var tasks: [NSManagedObject] = []
-    var months: [String] = []
-    var selectedTaskIndex = 0
+    var tasks = [[NSManagedObject]]()
+    var sections: [String] = []
+    var selectedIndexSection = 0
+    var selectedIndexRow = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -53,7 +54,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "editItem" {
             let secondViewController = segue.destination as! SecondViewController
-            let selectedTask = tasks[selectedTaskIndex]
+            let selectedTask = tasks[selectedIndexSection][selectedIndexRow]
             
             let title = selectedTask.value(forKey: "title") as! String
             let people = selectedTask.value(forKey: "people") as! String
@@ -79,6 +80,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     /** Fetch all items from CoreData */
     func loadTasks(){
         tasks.removeAll()
+        sections.removeAll()
         
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
         let context = appDelegate.persistentContainer.viewContext
@@ -90,9 +92,29 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         do {
             let result = try context.fetch(request)
-            for data in result as! [NSManagedObject] {
-                tasks.append(data)
+            let df = DateFormatter()
+            df.dateFormat = "MMMM YYYY"
+            
+            var tasksByMonth = [NSManagedObject]()
+            
+            /** Populate two-dimensional array grouped by month */
+            for task in result as! [NSManagedObject] {
+                let date = task.value(forKey: "date") as? Date
+                let month = df.string(from: date!)
+                
+                if !sections.contains(month){
+                    if (sections.count > 0){
+                        tasks.append(tasksByMonth)
+                        tasksByMonth = [NSManagedObject]()
+                    }
+                    sections.append(month)
+                }
+        
+                tasksByMonth.append(task)
             }
+            
+            tasks.append(tasksByMonth)
+            
         } catch {
             print("Failed.")
         }
@@ -127,12 +149,14 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 
                 let cancelButton = UIAlertAction(title: "Cancel", style: .cancel)
                 let editButton = UIAlertAction(title: "Edit", style: .default) { _ in
-                    self.selectedTaskIndex = index.row
+                    self.selectedIndexSection = index.section
+                    self.selectedIndexRow = index.row
                     self.performSegue(withIdentifier: "editItem", sender: self)
                 }
                 let deleteButton = UIAlertAction(title: "Delete", style: .default) { _ in
-                    self.deleteTask(task: self.tasks[index.row])
-                    self.tasks.remove(at: index.row)
+                    self.deleteTask(task: self.tasks[index.section][index.row])
+                    self.tasks[index.section].remove(at: index.row)
+                    self.loadTasks()
                     self.tableView.reloadData()
                 }
                 
@@ -147,12 +171,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     /** Return number of tasks */
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return tasks.count
+        return tasks[section].count
     }
     
     /** Return the cell at particular index */
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let task = tasks[indexPath.row]
+        let task = tasks[indexPath.section][indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         
         let title = task.value(forKey: "title") as! String
@@ -182,24 +206,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
     
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        
-        for task in tasks {
-            let date = task.value(forKey: "date") as? Date
-            let df = DateFormatter()
-            df.dateFormat = "MMMM YYYY"
-            let month = df.string(from: date!)
-            
-            if !months.contains(month) {
-                months.append(month)
-            }
-        }
-        
-        // return months.count
-        return 1
+        return sections.count
     }
     
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        return months[section]
+        return sections[section]
     }
     
     /** Retrieve the ordinal of chosen date */
