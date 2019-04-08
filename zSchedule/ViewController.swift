@@ -15,8 +15,9 @@ struct Item {
     let title: String
     let people: String
     let location: String
-    let finished: Bool
+    let complete: Bool
     let date: Date
+    let endDate: Date
     let time: Bool
 }
 
@@ -59,8 +60,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             let title = selectedTask.value(forKey: "title") as! String
             let people = selectedTask.value(forKey: "people") as! String
             let location = selectedTask.value(forKey: "location") as! String
-            let finished = selectedTask.value(forKey: "finished") as? Bool
+            let complete = selectedTask.value(forKey: "complete") as? Bool
             let date = selectedTask.value(forKey: "date") as! Date
+            let endDate = selectedTask.value(forKey: "endDate") as! Date
             let time = selectedTask.value(forKey: "time") as? Bool
             
             let item = Item (
@@ -68,8 +70,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 title: title,
                 people: people,
                 location: location,
-                finished: finished ?? false,
+                complete: complete ?? false,
                 date: date,
+                endDate: endDate,
                 time: time ?? true
             )
             
@@ -99,6 +102,11 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             
             /** Populate two-dimensional array grouped by month */
             for task in result as! [NSManagedObject] {
+                
+                if let complete = task.value(forKey: "complete") as? Bool {
+                    if complete { continue }
+                }
+                
                 let date = task.value(forKey: "date") as? Date
                 let month = df.string(from: date!)
                 
@@ -130,6 +138,23 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         do { try context.save() } catch { print(error) }
     }
     
+    /** Mark task as complete */
+    func markAsComplete(task: NSManagedObject){
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+        let context = appDelegate.persistentContainer.viewContext
+            
+        task.setValue(true, forKey: "complete")
+        
+        do {
+            try context.save()
+        } catch {
+            print("Could not mark item as complete.")
+        }
+        
+        loadTasks()
+        tableView.reloadData()
+    }
+    
     
     /** Bring up ActionSheet on long press */
     @IBAction func handleLongPress(_ sender: UILongPressGestureRecognizer) {
@@ -153,6 +178,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                     self.selectedIndexRow = index.row
                     self.performSegue(withIdentifier: "editItem", sender: self)
                 }
+                let completeButton = UIAlertAction(title: "Mark as Complete", style: .default) { _ in
+                    self.markAsComplete(task: self.tasks[index.section][index.row])
+                }
                 let deleteButton = UIAlertAction(title: "Delete", style: .default) { _ in
                     self.deleteTask(task: self.tasks[index.section][index.row])
                     self.tasks[index.section].remove(at: index.row)
@@ -161,6 +189,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 }
                 
                 actionSheet.addAction(editButton)
+                actionSheet.addAction(completeButton)
                 actionSheet.addAction(deleteButton)
                 actionSheet.addAction(cancelButton)
                 
@@ -181,8 +210,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         let title = task.value(forKey: "title") as! String
         let people = task.value(forKey: "people") as! String
+        let location = task.value(forKey: "location") as! String
         let time = task.value(forKey: "time") as? Bool
-        cell.textLabel?.text = "\(title) \(!people.isEmpty ? "(w. \(people))" : "")"
+        
+        
         
         let dt = task.value(forKey: "date") as? Date
         
@@ -199,7 +230,10 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         let date = "\(former) \(dateOrdinal) \(latter)"
         
-        cell.detailTextLabel?.text = date
+        cell.textLabel?.text = "\(title) \(!people.isEmpty ? "(w. \(people))" : "")"
+        
+        cell.detailTextLabel?.text = "\(date)\n\(location)"
+        cell.detailTextLabel?.numberOfLines = 0
         
         return cell
     }

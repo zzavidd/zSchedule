@@ -15,8 +15,13 @@ class SecondViewController: UITableViewController, UITextFieldDelegate {
     @IBOutlet weak var peopleTextField: UITextField!
     @IBOutlet weak var locationTextView: UITextView!
     @IBOutlet weak var datePicker: UIDatePicker!
+    @IBOutlet weak var endDatePicker: UIDatePicker!
     @IBOutlet weak var timeSwitch: UISwitch!
+    @IBOutlet weak var durationSwitch: UISwitch!
+    @IBOutlet weak var endDateCell: UITableViewCell!
+    
     var selectedDate = Date()
+    var selectedEndDate = Date()
     var time = true
     
     var item: Item?
@@ -27,11 +32,11 @@ class SecondViewController: UITableViewController, UITextFieldDelegate {
         
         titleTextField.delegate = self
         peopleTextField.delegate = self
-        timeSwitch.addTarget(self, action: #selector(switchToggled), for: .valueChanged)
         
         titleTextField.setValue(UIColor.darkGray, forKeyPath: "_placeholderLabel.textColor")
         peopleTextField.setValue(UIColor.darkGray, forKeyPath: "_placeholderLabel.textColor")
         datePicker.setValue(UIColor.white, forKey: "textColor")
+        endDatePicker.setValue(UIColor.white, forKey: "textColor")
         
         /** If editing, populate fields with item details */
         if item != nil {
@@ -39,9 +44,11 @@ class SecondViewController: UITableViewController, UITextFieldDelegate {
             peopleTextField.text = item?.people
             locationTextView.text = item?.location
             datePicker.date = (item?.date)!
+            endDatePicker.date = (item?.endDate) ?? Date()
             timeSwitch.setOn((item?.time)!, animated: true)
             
             selectedDate = datePicker.date
+            selectedEndDate = durationSwitch.isOn ? endDatePicker.date : Date()
             datePicker.datePickerMode = timeSwitch.isOn ? .dateAndTime : .date
         }
     }
@@ -64,8 +71,9 @@ class SecondViewController: UITableViewController, UITextFieldDelegate {
         
         newItem.setValue(titleTextField.text, forKey: "title")
         newItem.setValue(peopleTextField!.text, forKey: "people")
-        newItem.setValue("", forKey: "location")
+        newItem.setValue(locationTextView.text, forKey: "location")
         newItem.setValue(selectedDate, forKey: "date")
+        newItem.setValue(selectedEndDate, forKey: "endDate")
         newItem.setValue(time, forKey: "time")
         
         do {
@@ -85,10 +93,29 @@ class SecondViewController: UITableViewController, UITextFieldDelegate {
         selectedDate = sender.date
     }
     
+    override func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
+        
+        if cell === endDateCell && durationSwitch.isOn {
+            return 0
+        }
+        
+        return super.tableView(tableView, heightForRowAt: indexPath)
+    }
+    
+    override func tableView(_ tableView: UITableView, willDisplayHeaderView view: UIView, forSection section: Int) {
+        (view as! UITableViewHeaderFooterView).backgroundView?.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+    }
+    
     /** Change datepicker mode on switch */
-    @IBAction func switchToggled(_ sender: UISwitch) {
+    @IBAction func dateModeToggled(_ sender: UISwitch) {
         time = sender.isOn
         datePicker.datePickerMode = time ? .dateAndTime : .date
+    }
+    
+    /** Toggle visibility of end datepicker */
+    @IBAction func durationToggled(_ sender: UISwitch) {
+        endDateCell.isHidden = !sender.isOn
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
