@@ -20,6 +20,8 @@ class SecondViewController: UITableViewController, UITextFieldDelegate, UITextVi
     @IBOutlet weak var endTimeSwitch: UISwitch!
     @IBOutlet weak var durationSwitch: UISwitch!
     @IBOutlet weak var endDateCell: UITableViewCell!
+    @IBOutlet weak var endTimeCell: UITableViewCell!
+    
     
     var selectedDate = Date()
     var selectedEndDate = Date()
@@ -50,8 +52,6 @@ class SecondViewController: UITableViewController, UITextFieldDelegate, UITextVi
         datePicker.setValue(UIColor.white, forKey: "textColor")
         endDatePicker.setValue(UIColor.white, forKey: "textColor")
         
-        endDatePicker.minimumDate = datePicker.date
-        
         /** If editing, populate fields with item details */
         if item != nil {
             titleTextField.text = item?.title
@@ -76,12 +76,16 @@ class SecondViewController: UITableViewController, UITextFieldDelegate, UITextVi
             if item?.endDate != nil {
                 durationSwitch.setOn(true, animated: true)
                 endDateCell.isHidden = false
+                endTimeCell.isHidden = false
             }
             
             selectedDate = datePicker.date
             selectedEndDate = endDatePicker.date
             datePicker.datePickerMode = startTimeSwitch.isOn ? .dateAndTime : .date
+            endDatePicker.datePickerMode = endTimeSwitch.isOn ? .dateAndTime : .date
         }
+        
+        endDatePicker.minimumDate = datePicker.date
     }
     
     /** Add new or edit event in CoreData */
@@ -106,6 +110,7 @@ class SecondViewController: UITableViewController, UITextFieldDelegate, UITextVi
         newItem.setValue(selectedDate, forKey: "date")
         newItem.setValue(durationSwitch.isOn ? selectedEndDate : nil, forKey: "endDate")
         newItem.setValue(startTime, forKey: "startTime")
+        newItem.setValue(endTime, forKey: "endTime")
         
         do {
             try context.save()
@@ -140,16 +145,20 @@ class SecondViewController: UITableViewController, UITextFieldDelegate, UITextVi
     @IBAction func dateModeToggled(_ sender: UISwitch) {
         startTime = sender.isOn
         datePicker.datePickerMode = startTime ? .dateAndTime : .date
+        datePicker.minuteInterval = 5
+    }
+    
+    /** Change end datepicker mode on switch */
+    @IBAction func endDateModeToggled(_ sender: UISwitch) {
+        endTime = sender.isOn
+        endDatePicker.datePickerMode = endTime ? .dateAndTime : .date
+        endDatePicker.minuteInterval = 5
     }
     
     /** Toggle visibility of end datepicker */
     @IBAction func durationToggled(_ sender: UISwitch) {
         endDateCell.isHidden = !sender.isOn
-    }
-    
-    @IBAction func endDateModeToggled(_ sender: UISwitch) {
-        endTime = sender.isOn
-        endDatePicker.datePickerMode = endTime ? .dateAndTime : .date
+        endTimeCell.isHidden = !sender.isOn
     }
     
     /** Hide keyboard off focus */

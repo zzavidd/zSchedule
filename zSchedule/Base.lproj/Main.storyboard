@@ -262,7 +262,7 @@
                                         </tableViewCellContentView>
                                         <color key="backgroundColor" white="0.050000000000000003" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                     </tableViewCell>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="50" id="aV0-UF-Dkc">
+                                    <tableViewCell hidden="YES" clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" rowHeight="50" id="aV0-UF-Dkc">
                                         <rect key="frame" x="0.0" y="582" width="375" height="50"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="aV0-UF-Dkc" id="F1y-Wm-CTC">
@@ -336,6 +336,7 @@
                         <outlet property="durationSwitch" destination="atn-1v-Exh" id="h7i-yT-V7m"/>
                         <outlet property="endDateCell" destination="chi-FV-6lW" id="iBp-Ro-Yze"/>
                         <outlet property="endDatePicker" destination="8Ta-Rf-cp1" id="H9C-MQ-GKq"/>
+                        <outlet property="endTimeCell" destination="aV0-UF-Dkc" id="3nV-GD-TdR"/>
                         <outlet property="endTimeSwitch" destination="7BC-HV-Hbz" id="cMR-Lg-trn"/>
                         <outlet property="locationTextView" destination="bRU-rm-4oX" id="sJl-Kq-mnC"/>
                         <outlet property="peopleTextField" destination="I9B-LF-iah" id="6Xx-fq-HgS"/>
