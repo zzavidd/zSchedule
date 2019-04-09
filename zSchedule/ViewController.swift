@@ -17,8 +17,9 @@ struct Item {
     let location: String
     let complete: Bool
     let date: Date
-    let endDate: Date
-    let time: Bool
+    let endDate: Date?
+    let startTime: Bool
+    let endTime: Bool
 }
 
 class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, NSFetchedResultsControllerDelegate {
@@ -62,8 +63,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             let location = selectedTask.value(forKey: "location") as! String
             let complete = selectedTask.value(forKey: "complete") as? Bool
             let date = selectedTask.value(forKey: "date") as! Date
-            let endDate = selectedTask.value(forKey: "endDate") as! Date
-            let time = selectedTask.value(forKey: "time") as? Bool
+            let endDate = selectedTask.value(forKey: "endDate") as? Date
+            let startTime = selectedTask.value(forKey: "startTime") as? Bool
+            let endTime = selectedTask.value(forKey: "endTime") as? Bool
             
             let item = Item (
                 id: selectedTask,
@@ -72,8 +74,9 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 location: location,
                 complete: complete ?? false,
                 date: date,
-                endDate: endDate,
-                time: time ?? true
+                endDate: endDate ?? nil,
+                startTime: startTime ?? false,
+                endTime: endTime ?? false
             )
             
             secondViewController.item = item
@@ -181,7 +184,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
                 let completeButton = UIAlertAction(title: "Mark as Complete", style: .default) { _ in
                     self.markAsComplete(task: self.tasks[index.section][index.row])
                 }
-                let deleteButton = UIAlertAction(title: "Delete", style: .default) { _ in
+                let deleteButton = UIAlertAction(title: "Delete", style: .destructive) { _ in
                     self.deleteTask(task: self.tasks[index.section][index.row])
                     self.tasks[index.section].remove(at: index.row)
                     self.loadTasks()
@@ -211,28 +214,26 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         let title = task.value(forKey: "title") as! String
         let people = task.value(forKey: "people") as! String
         let location = task.value(forKey: "location") as! String
-        let time = task.value(forKey: "time") as? Bool
+        let startTime = task.value(forKey: "startTime") as? Bool
+        let endTime = task.value(forKey: "endTime") as? Bool
         
+        let dt = task.value(forKey: "date") as! Date
+        let date = getFormattedDate(dt, withTime: startTime ?? false)
+        var subText = date
         
+        /** Show end date if exists */
+        if let edt = task.value(forKey: "endDate") as? Date {
+            let endDate = getFormattedDate(edt, withTime: endTime ?? false)
+            subText = "Start: \(subText)\nEnd: \(endDate)"
+        }
         
-        let dt = task.value(forKey: "date") as? Date
-        
-        let df1 = DateFormatter()
-        let df2 = DateFormatter()
-        let suffix = DateFormatter()
-        df1.dateFormat = "EEEE"
-        suffix.dateFormat = "d"
-        df2.dateFormat = (time ?? true) ? "MMMM YYYY - HH:mm" : "MMMM YYYY"
-
-        let former = df1.string(from: dt!)
-        let dateOrdinal = getDateWithOrdinal(suffix.string(from: dt!))
-        let latter = df2.string(from: dt!)
-        
-        let date = "\(former) \(dateOrdinal) \(latter)"
+        /** Show location if exists */
+        if !location.isEmpty {
+            subText += "\n\(location)"
+        }
         
         cell.textLabel?.text = "\(title) \(!people.isEmpty ? "(w. \(people))" : "")"
-        
-        cell.detailTextLabel?.text = "\(date)\n\(location)"
+        cell.detailTextLabel?.text = subText
         cell.detailTextLabel?.numberOfLines = 0
         
         return cell
@@ -247,18 +248,33 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         return sections[section]
     }
     
+    func getFormattedDate(_ date: Date, withTime: Bool) -> String {
+        let df1 = DateFormatter()
+        let df2 = DateFormatter()
+        let suffix = DateFormatter()
+        df1.dateFormat = "EEEE"
+        suffix.dateFormat = "d"
+        df2.dateFormat = withTime ? "MMMM YYYY - HH:mm" : "MMMM YYYY"
+        
+        let former = df1.string(from: date)
+        let dateOrdinal = getOrdinal(suffix.string(from: date))
+        let latter = df2.string(from: date)
+        
+        return "\(former) \(dateOrdinal) \(latter)"
+    }
+    
     /** Retrieve the ordinal of chosen date */
-    func getDateWithOrdinal(_ dt: String) -> String {
+    func getOrdinal(_ date: String) -> String {
         var suffix = ""
         
-        switch dt {
+        switch date {
         case "1", "21", "31": suffix = "st";
         case "2", "22": suffix = "nd";
         case "3", "23": suffix = "rd";
         default: suffix = "th";
         }
         
-        return "\(dt)\(suffix)"
+        return "\(date)\(suffix)"
     }
 
 }
