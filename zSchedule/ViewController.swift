@@ -13,6 +13,7 @@ import CoreData
 struct Item {
     let id: NSManagedObject
     let title: String
+    let type: String
     let people: String
     let location: String
     let complete: Bool
@@ -59,6 +60,12 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             let selectedTask = tasks[selectedIndexSection][selectedIndexRow]
             
             let title = selectedTask.value(forKey: "title") as! String
+            let type: String
+            if let nicce = selectedTask.value(forKey: "type") {
+                type = nicce as! String
+            } else {
+                type = ""
+            }
             let people = selectedTask.value(forKey: "people") as! String
             let location = selectedTask.value(forKey: "location") as! String
             let complete = selectedTask.value(forKey: "complete") as? Bool
@@ -70,6 +77,7 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
             let item = Item (
                 id: selectedTask,
                 title: title,
+                type: type,
                 people: people,
                 location: location,
                 complete: complete ?? false,
@@ -236,9 +244,35 @@ class ViewController: UIViewController, UITableViewDelegate, UITableViewDataSour
         cell.detailTextLabel?.text = subText
         cell.detailTextLabel?.numberOfLines = 0
         
+        
+        if let type = task.value(forKey: "type") {
+            var color: UIColor
+            
+            switch (type as! String) {
+                case "Motive": color = UIColor.green
+                case "Appointment": color = UIColor.blue
+                case "Deadline": color = UIColor.red
+                default: color = UIColor.init(hue: 0, saturation: 0, brightness: 0, alpha: 0)
+            }
+            
+            cell.layer.addBorder(edge: UIRectEdge.left, color: color, thickness: 4)
+        }
+        
+        // inset(view: cell.contentView, insets: UIEdgeInsets(top: 5, left: 0, bottom: 5, right: 0))
+        
         return cell
     }
     
+    func inset(view: UIView, insets: UIEdgeInsets) {
+        if let superview = view.superview {
+            view.translatesAutoresizingMaskIntoConstraints = false
+            
+            view.leftAnchor.constraint(equalTo: superview.leftAnchor, constant: insets.left).isActive = true
+            view.rightAnchor.constraint(equalTo: superview.rightAnchor, constant: -insets.right).isActive = true
+            view.topAnchor.constraint(equalTo: superview.topAnchor, constant: insets.top).isActive = true
+            view.bottomAnchor.constraint(equalTo: superview.bottomAnchor, constant: -insets.bottom).isActive = true
+        }
+    }
     
     func numberOfSections(in tableView: UITableView) -> Int {
         return sections.count
@@ -290,5 +324,32 @@ extension UIViewController {
     
     @objc func dismissKeyboard(){
         view.endEditing(true)
+    }
+}
+
+/** Add specific borders */
+extension CALayer {
+    func addBorder(edge: UIRectEdge, color: UIColor, thickness: CGFloat) {
+        
+        let border = CALayer()
+        
+        switch edge {
+        case UIRectEdge.top:
+            border.frame = CGRect(x: 0, y: 0, width: self.bounds.width, height: thickness)
+            
+        case UIRectEdge.bottom:
+            border.frame = CGRect(x: 0, y: self.bounds.height - thickness,  width: UIScreen.main.bounds.width, height: thickness)
+            
+        case UIRectEdge.left:
+            border.frame = CGRect(x: 0, y: 0,  width: thickness, height: self.bounds.height)
+            
+        case UIRectEdge.right:
+            border.frame = CGRect(x: self.bounds.width - thickness, y: 0,  width: thickness, height: self.bounds.height)
+        default:
+            break
+        }
+        
+        border.backgroundColor = color.cgColor;
+        self.addSublayer(border)
     }
 }

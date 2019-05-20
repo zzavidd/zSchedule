@@ -9,9 +9,10 @@
 import UIKit
 import CoreData
 
-class SecondViewController: UITableViewController, UITextFieldDelegate, UITextViewDelegate {
+class SecondViewController: UITableViewController, UITextFieldDelegate, UITextViewDelegate, UIPickerViewDelegate, UIPickerViewDataSource {
     
     @IBOutlet weak var titleTextField: UITextField!
+    @IBOutlet weak var typePicker: UIPickerView!
     @IBOutlet weak var peopleTextField: UITextField!
     @IBOutlet weak var locationTextView: UITextView!
     @IBOutlet weak var datePicker: UIDatePicker!
@@ -22,26 +23,31 @@ class SecondViewController: UITableViewController, UITextFieldDelegate, UITextVi
     @IBOutlet weak var endDateCell: UITableViewCell!
     @IBOutlet weak var endTimeCell: UITableViewCell!
     
+     var types: [String] = ["Motive", "Deadline", "Appointment", "Miscellaneous"]
+    var item: Item?
     
     var selectedDate = Date()
     var selectedEndDate = Date()
+    var selectedType: String = ""
     var startTime = false
     var endTime = false
     var locationPlaceholderText = "Enter a location..."
     var customColor: UIColor = UIColor.init()
     
-    var item: Item?
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.hideKeyboardWhenTappedAround()
         
-        /** Store custom textColor for programmtic use */
-        customColor = titleTextField.textColor!
-        
         titleTextField.delegate = self
         peopleTextField.delegate = self
         locationTextView.delegate = self
+        typePicker.delegate = self
+        typePicker.dataSource = self
+        
+        /** Store custom textColor for programmtic use */
+        customColor = titleTextField.textColor!
+        
+        selectedType = types[0]
         
         /** Set placeholder colors and text */
         titleTextField.setValue(UIColor.darkGray, forKeyPath: "_placeholderLabel.textColor")
@@ -55,6 +61,7 @@ class SecondViewController: UITableViewController, UITextFieldDelegate, UITextVi
         /** If editing, populate fields with item details */
         if item != nil {
             titleTextField.text = item?.title
+            //typePicker.selectRow(0, inComponent: 0, animated: true)
             peopleTextField.text = item?.people
             datePicker.date = (item?.date)!
             endDatePicker.date = (item?.endDate) ?? datePicker.date
@@ -81,8 +88,11 @@ class SecondViewController: UITableViewController, UITextFieldDelegate, UITextVi
             
             selectedDate = datePicker.date
             selectedEndDate = endDatePicker.date
+            //selectedType = typePicker.
             datePicker.datePickerMode = startTimeSwitch.isOn ? .dateAndTime : .date
+            datePicker.minuteInterval = 5
             endDatePicker.datePickerMode = endTimeSwitch.isOn ? .dateAndTime : .date
+            endDatePicker.minuteInterval = 5
         }
         
         endDatePicker.minimumDate = datePicker.date
@@ -105,6 +115,7 @@ class SecondViewController: UITableViewController, UITextFieldDelegate, UITextVi
         }
         
         newItem.setValue(titleTextField.text, forKey: "title")
+        newItem.setValue(selectedType, forKey: "type")
         newItem.setValue(peopleTextField!.text, forKey: "people")
         newItem.setValue(!locationTextView.unedited() ? locationTextView.text : "", forKey: "location")
         newItem.setValue(selectedDate, forKey: "date")
@@ -191,6 +202,37 @@ class SecondViewController: UITableViewController, UITextFieldDelegate, UITextVi
             locationTextView.text = locationPlaceholderText
             locationTextView.textColor = UIColor.darkGray
         }
+    }
+    
+    /** Number of columns for component */
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    /** Number of items in picker */
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return types.count
+    }
+    
+    /** Values for items in picker */
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        return types[row]
+    }
+    
+    /** On value selection */
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        selectedType = types[row]
+    }
+    
+    /** Set text color of UIPickerView */
+    public func pickerView(_ pickerView: UIPickerView, attributedTitleForRow row: Int, forComponent component: Int) -> NSAttributedString? {
+        
+        let data = types[row]
+        
+        let title = NSAttributedString(string: data, attributes: [NSAttributedString.Key.font:UIFont(name: "Helvetica", size: 17.0)!,NSAttributedString.Key.foregroundColor:UIColor.white])
+        
+        return title
+        
     }
 }
 
